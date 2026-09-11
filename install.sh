@@ -216,6 +216,8 @@ extract_and_deploy() {
         tar -czf "$PROD_DIR/config_backup/tokens_${token_ts}.tar.gz" -C "$AUTH_DIR" . 2>/dev/null || true
     fi
 
+    mkdir -p "$PROD_DIR"
+
     if [[ "$OS" == "windows" ]]; then
         unzip -o "$filename" -d "$PROD_DIR" >/dev/null
     else

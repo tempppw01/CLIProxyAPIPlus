@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/router-for-me/CLIProxyAPI/v7/internal/registry"
 	sdkpluginstore "github.com/router-for-me/CLIProxyAPI/v7/sdk/pluginstore"
@@ -376,6 +377,31 @@ type ClaudeKey struct {
 	// Claude /v1/messages requests. It is disabled by default so upstream seed
 	// changes do not alter the proxy's legacy behavior.
 	ExperimentalCCHSigning bool `yaml:"experimental-cch-signing,omitempty" json:"experimental-cch-signing,omitempty"`
+
+	// APIKeyEntries defines per-key proxy configuration for this Claude provider block.
+	APIKeyEntries []ClaudeKeyAPIKey `yaml:"api-key-entries,omitempty" json:"api-key-entries,omitempty"`
+}
+
+// ClaudeKeyAPIKey represents a single API key entry with optional per-key proxy configuration.
+type ClaudeKeyAPIKey struct {
+	// APIKey is the authentication key for accessing Claude API services.
+	APIKey string `yaml:"api-key" json:"api-key"`
+
+	// BaseURL overrides the parent block's base URL for this specific key.
+	BaseURL string `yaml:"base-url,omitempty" json:"base-url,omitempty"`
+
+	// ProxyURL overrides the global proxy setting for this API key if provided.
+	ProxyURL string `yaml:"proxy-url,omitempty" json:"proxy-url,omitempty"`
+}
+
+// HasAnyEntryBaseURL returns true if any entry in the slice has a non-empty BaseURL.
+func HasAnyEntryBaseURL(entries []OpenAICompatibilityAPIKey) bool {
+	for _, e := range entries {
+		if strings.TrimSpace(e.BaseURL) != "" {
+			return true
+		}
+	}
+	return false
 }
 
 func (k ClaudeKey) GetAPIKey() string { return k.APIKey }
@@ -629,12 +655,18 @@ type OpenAICompatibility struct {
 
 	// DisableCooling disables auth/model cooldown scheduling for this provider when true.
 	DisableCooling bool `yaml:"disable-cooling,omitempty" json:"disable-cooling,omitempty"`
+
+	// SupportsPromptCaching indicates that the upstream provider supports Anthropic-style prompt caching.
+	SupportsPromptCaching bool `yaml:"supports-prompt-caching,omitempty" json:"supports-prompt-caching,omitempty"`
 }
 
 // OpenAICompatibilityAPIKey represents an API key configuration with optional proxy setting.
 type OpenAICompatibilityAPIKey struct {
 	// APIKey is the authentication key for accessing the external API services.
 	APIKey string `yaml:"api-key" json:"api-key"`
+
+	// BaseURL overrides the parent block's base URL for this specific key.
+	BaseURL string `yaml:"base-url,omitempty" json:"base-url,omitempty"`
 
 	// ProxyURL overrides the global proxy setting for this API key if provided.
 	ProxyURL string `yaml:"proxy-url,omitempty" json:"proxy-url,omitempty"`
